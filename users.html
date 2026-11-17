@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<script src="https://cdn.tailwindcss.com"></script>
+		<title>Табло участников — Жыл шебері 2026</title>
+	</head>
+	<body class="bg-gradient-to-b from-sky-50 via-slate-50 to-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-amber-500 selection:text-white">
+		<!-- Шапка страницы -->
+		<header class="bg-white/90 backdrop-blur-xl border-b border-slate-200 px-6 lg:px-12 py-5 flex items-center justify-between shadow-sm sticky top-0 z-50">
+			<div class="flex items-center gap-6">
+				<div class="flex items-center gap-3 bg-white px-3.5 py-2 rounded-2xl border border-slate-200 shadow-sm">
+					<img src="./images/logo-1.png" alt="logo" class="h-9 w-auto object-contain" />
+					<img src="./images/logo-2.jpeg" alt="logo" class="h-9 w-auto object-contain rounded-lg border border-amber-500/30" />
+					<img src="./images/logo.png" alt="logo" class="h-9 w-auto object-contain" />
+				</div>
+				<div>
+					<h1 class="text-2xl lg:text-3xl font-black tracking-tight bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 bg-clip-text text-transparent">ЖЫЛ ШЕБЕРІ — 2026</h1>
+					<p class="text-xs lg:text-sm text-sky-900 font-semibold tracking-wide">Областной конкурс профессионального мастерства</p>
+				</div>
+			</div>
+
+			<!-- Счётчик и управление -->
+			<div class="flex items-center gap-4">
+				<div class="hidden sm:flex items-center gap-2.5 bg-amber-50 border border-amber-200/80 px-4 py-2.5 rounded-2xl shadow-sm">
+					<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+					<span class="text-sm font-semibold text-slate-700">Зарегистрировано:</span>
+					<span id="totalCount" class="text-lg font-black text-amber-700">0</span>
+				</div>
+
+				<button id="fullscreenBtn" title="На весь экран" class="p-3 rounded-2xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 transition-all shadow-sm">
+					<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+					</svg>
+				</button>
+			</div>
+		</header>
+
+		<!-- Основной контент -->
+		<main class="flex-1 max-w-[1800px] w-full mx-auto px-6 lg:px-12 py-10 flex flex-col justify-center">
+			<!-- Статус загрузки -->
+			<div id="statusMessage" class="text-center py-24 text-slate-500 text-2xl font-semibold">Загрузка списка участников...</div>
+
+			<!-- Сетка карточек участников -->
+			<div id="boardGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-6 hidden">
+				<!-- Карточки будут добавлены через JavaScript -->
+			</div>
+		</main>
+
+		<script>
+			const API_URL = 'https://69e5f9a8ce4e908a155eba75.mockapi.io/api/v1/users'
+
+			// Экранирование текста для защиты от XSS
+			function escapeHtml(str) {
+				if (!str) return ''
+				return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+			}
+
+			async function loadParticipants() {
+				const boardGrid = document.getElementById('boardGrid')
+				const statusMessage = document.getElementById('statusMessage')
+				const totalCount = document.getElementById('totalCount')
+
+				try {
+					const response = await fetch(API_URL)
+					if (!response.ok) throw new Error('Ошибка сети')
+					const users = await response.json()
+
+					totalCount.textContent = users.length
+
+					if (!users.length) {
+						boardGrid.classList.add('hidden')
+						statusMessage.classList.remove('hidden')
+						statusMessage.textContent = 'Ожидание регистрации участников...'
+						return
+					}
+
+					// Сортировка по номеру по возрастанию
+					users.sort((a, b) => Number(a.number || 999) - Number(b.number || 999))
+
+					statusMessage.classList.add('hidden')
+					boardGrid.classList.remove('hidden')
+
+					boardGrid.innerHTML = users
+						.map((user) => {
+							const number = escapeHtml(user.number ?? user.num ?? '—')
+							const fio = escapeHtml(user.fio ?? user.name ?? 'Без имени')
+							const institution = escapeHtml(user.institution ?? user.college ?? '')
+
+							return `
+                <div class="bg-white border border-sky-100 rounded-3xl p-6 flex items-center gap-5 shadow-[0_10px_30px_rgba(8,112,184,0.06)] hover:shadow-[0_20px_40px_rgba(8,112,184,0.1)] transition-all">
+                  <!-- Яркий блок с номером -->
+                  <div class="shrink-0 w-24 h-24 lg:w-28 lg:h-28 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex flex-col items-center justify-center shadow-lg shadow-amber-500/25">
+                    <span class="text-5xl lg:text-6xl font-black leading-none tracking-tighter">${number}</span>
+                  </div>
+
+                  <!-- Информация об участнике -->
+                  <div class="min-w-0 flex-1">
+                    <h2 class="text-xl lg:text-2xl font-extrabold text-slate-900 leading-snug break-words">
+                      ${fio}
+                    </h2>
+                    <p class="mt-2 text-sm lg:text-base font-medium text-sky-900 leading-snug line-clamp-3">
+                      ${institution}
+                    </p>
+                  </div>
+                </div>
+              `
+						})
+						.join('')
+				} catch (error) {
+					console.error('Ошибка загрузки данных:', error)
+				}
+			}
+
+			document.addEventListener('DOMContentLoaded', () => {
+				loadParticipants()
+
+				// Автообновление каждые 10 секунд
+				setInterval(loadParticipants, 10000)
+
+				// Переключение полноэкранного режима
+				const fullscreenBtn = document.getElementById('fullscreenBtn')
+				fullscreenBtn.addEventListener('click', () => {
+					if (!document.fullscreenElement) {
+						document.documentElement.requestFullscreen().catch(() => {})
+					} else {
+						document.exitFullscreen().catch(() => {})
+					}
+				})
+			})
+		</script>
+	</body>
+</html>
