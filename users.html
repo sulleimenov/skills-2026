@@ -43,7 +43,7 @@
 			<div id="statusMessage" class="text-center py-24 text-slate-500 text-2xl font-semibold">Загрузка списка участников...</div>
 
 			<!-- Сетка карточек участников -->
-			<div id="boardGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-6 hidden">
+			<div id="boardGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-3 hidden">
 				<!-- Карточки будут добавлены через JavaScript -->
 			</div>
 		</main>
@@ -89,10 +89,10 @@
 							const institution = escapeHtml(user.institution ?? user.college ?? '')
 
 							return `
-                <div class="bg-white border border-sky-100 rounded-3xl p-6 flex items-center gap-5 shadow-[0_10px_30px_rgba(8,112,184,0.06)] hover:shadow-[0_20px_40px_rgba(8,112,184,0.1)] transition-all">
+                <div class="bg-white border border-sky-100 rounded-3xl p-3 flex items-center gap-5 shadow-[0_10px_30px_rgba(8,112,184,0.06)] hover:shadow-[0_20px_40px_rgba(8,112,184,0.1)] transition-all">
                   <!-- Яркий блок с номером -->
-                  <div class="shrink-0 w-24 h-24 lg:w-28 lg:h-28 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex flex-col items-center justify-center shadow-lg shadow-amber-500/25">
-                    <span class="text-5xl lg:text-6xl font-black leading-none tracking-tighter">${number}</span>
+                  <div class="shrink-0 w-24 h-24 lg:w-20 lg:h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex flex-col items-center justify-center shadow-lg shadow-amber-500/25">
+                    <span class="text-4xl lg:text-5xl font-black leading-none tracking-tighter">${number}</span>
                   </div>
 
                   <!-- Информация об участнике -->

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<script src="https://cdn.tailwindcss.com"></script>
+		<title>Табло участников — Жыл шебері 2026</title>
+	</head>
+	<body class="bg-slate-900 text-white font-sans antialiased min-h-screen flex flex-col selection:bg-amber-500 selection:text-slate-900">
+		<!-- Компактная шапка для большого экрана -->
+		<header class="bg-slate-950/80 border-b border-slate-800 px-6 lg:px-12 py-4 flex items-center justify-between">
+			<div class="flex items-center gap-4">
+				<div class="flex items-center gap-2 bg-white/95 px-3 py-1.5 rounded-xl">
+					<img src="./images/logo-1.png" alt="logo" class="h-8 w-auto object-contain" />
+					<img src="./images/logo-2.jpeg" alt="logo" class="h-8 w-auto object-contain rounded" />
+					<img src="./images/logo.png" alt="logo" class="h-8 w-auto object-contain" />
+				</div>
+				<div>
+					<h1 class="text-2xl lg:text-3xl font-black tracking-tight bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 bg-clip-text text-transparent">ЖЫЛ ШЕБЕРІ — 2026</h1>
+					<p class="text-xs lg:text-sm text-slate-400 font-medium">Областной конкурс профессионального мастерства</p>
+				</div>
+			</div>
+
+			<!-- Счётчик и управление экраном -->
+			<div class="flex items-center gap-4">
+				<div class="hidden sm:flex items-center gap-2 bg-slate-800/90 border border-slate-700 px-4 py-2 rounded-xl">
+					<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+					<span class="text-sm text-slate-300">Зарегистрировано:</span>
+					<span id="totalCount" class="text-lg font-extrabold text-amber-400">0</span>
+				</div>
+
+				<button id="fullscreenBtn" title="На весь экран" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition-colors">
+					<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+					</svg>
+				</button>
+			</div>
+		</header>
+
+		<!-- Основная сетка карточек для проектора / ТВ -->
+		<main class="flex-1 max-w-[1800px] w-full mx-auto px-6 lg:px-12 py-8 flex flex-col justify-center">
+			<!-- Состояние загрузки / пустого списка -->
+			<div id="statusMessage" class="text-center py-20 text-slate-400 text-2xl font-medium">Загрузка списка участников...</div>
+
+			<!-- Сетка участников -->
+			<div id="boardGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-3 hidden">
+				<!-- Карточки подгружаются сюда -->
+			</div>
+		</main>
+
+		<script>
+			const API_URL = 'https://69e5f9a8ce4e908a155eba75.mockapi.io/api/v1/users'
+
+			// Экранирование HTML для безопасности
+			function escapeHtml(str) {
+				if (!str) return ''
+				return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+			}
+
+			async function loadParticipants() {
+				const boardGrid = document.getElementById('boardGrid')
+				const statusMessage = document.getElementById('statusMessage')
+				const totalCount = document.getElementById('totalCount')
+
+				try {
+					const response = await fetch(API_URL)
+					if (!response.ok) throw new Error('Ошибка сети')
+					const users = await response.json()
+
+					totalCount.textContent = users.length
+
+					if (!users.length) {
+						boardGrid.classList.add('hidden')
+						statusMessage.classList.remove('hidden')
+						statusMessage.textContent = 'Ожидание регистрации участников...'
+						return
+					}
+
+					// Сортируем по присвоенному номеру по возрастанию (1, 2, 3...)
+					users.sort((a, b) => Number(a.number || 999) - Number(b.number || 999))
+
+					statusMessage.classList.add('hidden')
+					boardGrid.classList.remove('hidden')
+
+					boardGrid.innerHTML = users
+						.map((user) => {
+							const number = escapeHtml(user.number ?? user.num ?? '—')
+							const fio = escapeHtml(user.fio ?? user.name ?? 'Без имени')
+							const institution = escapeHtml(user.institution ?? user.college ?? '')
+
+							return `
+                <div class="bg-slate-800/90 border-2 border-slate-700/80 rounded-3xl p-3 flex items-center gap-5 shadow-xl">
+                  <!-- Крупный блок с номером -->
+                  <div class="shrink-0 w-24 h-24 lg:w-20 lg:h-20 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-slate-950 flex flex-col items-center justify-center shadow-lg shadow-amber-500/20">
+                    <span class="text-4xl lg:text-5xl font-black leading-none tracking-tighter">${number}</span>
+                  </div>
+
+                  <!-- ФИО и колледж -->
+                  <div class="min-w-0 flex-1">
+                    <h2 class="text-xl lg:text-2xl font-extrabold text-white leading-snug break-words">
+                      ${fio}
+                    </h2>
+                    <p class="mt-2 text-sm lg:text-base font-medium text-sky-300 leading-snug line-clamp-3">
+                      ${institution}
+                    </p>
+                  </div>
+                </div>
+              `
+						})
+						.join('')
+				} catch (error) {
+					console.error('Ошибка загрузки:', error)
+				}
+			}
+
+			document.addEventListener('DOMContentLoaded', () => {
+				loadParticipants()
+
+				// Автообновление данных каждые 10 секунд в реальном времени
+				setInterval(loadParticipants, 10000)
+
+				// Полноэкранный режим по кнопке
+				const fullscreenBtn = document.getElementById('fullscreenBtn')
+				fullscreenBtn.addEventListener('click', () => {
+					if (!document.fullscreenElement) {
+						document.documentElement.requestFullscreen().catch(() => {})
+					} else {
+						document.exitFullscreen().catch(() => {})
+					}
+				})
+			})
+		</script>
+	</body>
+</html>
